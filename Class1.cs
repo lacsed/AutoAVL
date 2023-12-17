@@ -1,4 +1,4 @@
-﻿namespace AutoVL
+﻿namespace AutoAVL
 {
     public class Class1
     {

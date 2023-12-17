@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AutoVL
+namespace AutoAVL
 {
     /// <summary>
     /// A 2D vector class that represents both points and vectors.
@@ -90,6 +90,22 @@ namespace AutoVL
         /// </summary>
         /// <param name="value">The scalar value.</
         /// <returns>The resulting Vector2D object after the division.</returns>
+
+        public static Vector2D GetMinValues(Vector2D a, Vector2D b)
+        {
+            float minX = (a.x < b.x) ? a.x : b.x;
+            float minY = (a.y <  b.y) ? a.y : b.y;
+
+            return new Vector2D(minX, minY);
+        }
+
+        public static Vector2D GetMaxValues(Vector2D a, Vector2D b)
+        {
+            float maxX = (a.x > b.x) ? a.x : b.x;
+            float maxY = (a.y > b.y) ? a.y : b.y;
+
+            return new Vector2D(maxX, maxY);
+        }
 
         public Vector2D Divide(float value)
         {
