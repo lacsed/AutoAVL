@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AutoAVL.Settings;
 using UltraDES;
 
-namespace AutoAVL
+namespace AutoAVL.Drawables
 {
-    public class Node
+    public class Node : Drawable
     {
         public Vector2D position;
         public Vector2D displacement;
@@ -62,11 +63,11 @@ namespace AutoAVL
         public static void InitialPositioning(List<Node> nodes)
         {
             float initialRadius = 10.0f;
-            float stepAngle = (float) (2 * Math.PI / nodes.Count);
+            float stepAngle = (float)(2 * Math.PI / nodes.Count);
 
             for (int i = 0; i < nodes.Count; i++)
             {
-                nodes[i].position = new Vector2D(initialRadius * (float) Math.Cos(i * stepAngle), initialRadius * (float) Math.Sin(i * stepAngle));
+                nodes[i].position = new Vector2D(initialRadius * (float)Math.Cos(i * stepAngle), initialRadius * (float)Math.Sin(i * stepAngle));
             }
         }
 
@@ -84,6 +85,18 @@ namespace AutoAVL
         public static float DisplaceNodes(List<Node> nodes)
         {
             return 0;
+        }
+
+        public string ToSvg(DrawingDir drawingDir)
+        {
+            string svg;
+
+            return svg;
+        }
+
+        public Box GetBox(DrawingDir drawingDir)
+        {
+
         }
     }
 }

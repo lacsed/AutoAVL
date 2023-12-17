@@ -4,14 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AutoAVL
+namespace AutoAVL.Settings
 {
     public class PhyD
     {
         public float stopCondition;
 
-        public PhyD() 
-        { 
+        public PhyD()
+        {
             stopCondition = 0.005f;
         }
     }

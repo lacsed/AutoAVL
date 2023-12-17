@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AutoAVL.Settings;
 
-namespace AutoAVL
+namespace AutoAVL.Drawables
 {
-    public class Link
+    public class Link : Drawable
     {
         public Node start;
         public Node end;
@@ -22,21 +23,21 @@ namespace AutoAVL
 
         public Link(Node origin, Node destination, string name)
         {
-            this.start = origin;
-            this.end = destination;
+            start = origin;
+            end = destination;
             this.name = name;
-            this.guid = Guid.NewGuid();
-            this.isAutoLink = (origin == destination) ? true : false;
+            guid = Guid.NewGuid();
+            isAutoLink = origin == destination ? true : false;
         }
 
-        public static void PullLinks(List<Link> links, PhyD phyD) 
+        public static void PullLinks(List<Link> links, PhyD phyD)
         {
-            
+
         }
 
-        public Vector2D GetExtremes()
+        public Box GetBox(DrawingDir drawingDir)
         {
-            
+
         }
     }
 }

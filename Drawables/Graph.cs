@@ -5,10 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
+using AutoAVL.Settings;
 using UltraDES;
-using UltraDES.PetriNets;
 
-namespace AutoAVL
+namespace AutoAVL.Drawables
 {
     public class Graph
     {
@@ -66,6 +66,9 @@ namespace AutoAVL
 
             drawingDir.SetCanvasDimensions(this.GetCanvasLimits());
 
+            foreach (Node node in graphNodes)
+                svgImage += node.ToSvg(drawingDir);
+
             return "";
         }
 
@@ -74,6 +77,8 @@ namespace AutoAVL
             Vector2D topLeft = new Vector2D();
             Vector2D bottomRight = new Vector2D();
 
+
+            foreach (Drawable drawable in graphNodes)
 
             foreach (Node node in graphNodes)
             {
