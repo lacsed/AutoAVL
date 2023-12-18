@@ -63,14 +63,15 @@ namespace AutoAVL.Drawables
             CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
 
             string svgImage = "";
+            SvgCanvas canvas = new SvgCanvas();
 
-            drawingDir.SetCanvasDimensions(this.GetCanvasLimits());
+            canvas.SetCanvasDimensions(this.GetCanvasLimits());
 
             foreach (Drawable drawable in graphNodes.Concat<Drawable>(graphLinks).ToList())
-                svgImage += drawable.ToSvg(drawingDir);
+                svgImage += drawable.ToSvg(drawingDir, canvas);
 
-            string svgDimensions = drawingDir.SvgDimensions();
-            string svgSettings = drawingDir.SvgSettings();
+            string svgDimensions = canvas.SvgDimensions();
+            string svgSettings = canvas.SvgSettings();
 
             return svgDimensions + svgSettings + svgImage;
         }

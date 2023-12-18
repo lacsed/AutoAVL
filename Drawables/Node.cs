@@ -14,7 +14,6 @@ namespace AutoAVL.Drawables
         public Vector2D displacement;
 
         public string name;
-        public Vector2D nameOffset;
 
         public bool marked;
 
@@ -25,7 +24,6 @@ namespace AutoAVL.Drawables
             position = new Vector2D();
             displacement = new Vector2D();
             name = "";
-            nameOffset = new Vector2D();
             marked = false;
             id = Guid.NewGuid();
         }
@@ -35,7 +33,6 @@ namespace AutoAVL.Drawables
             position = new Vector2D();
             displacement = new Vector2D();
             name = input_name;
-            nameOffset = new Vector2D();
             marked = isMarked;
             id = Guid.NewGuid();
         }
@@ -45,7 +42,6 @@ namespace AutoAVL.Drawables
             position = inputPosition;
             displacement = new Vector2D();
             name = inputName;
-            nameOffset = new Vector2D();
             marked = inputMarked;
             id = Guid.NewGuid();
         }
@@ -55,7 +51,6 @@ namespace AutoAVL.Drawables
             position = new Vector2D();
             displacement = new Vector2D();
             name = state.ToString();
-            nameOffset = new Vector2D();
             marked = state.IsMarked;
             id = Guid.NewGuid();
         }
@@ -87,9 +82,22 @@ namespace AutoAVL.Drawables
             return 0;
         }
 
-        public string ToSvg(DrawingDir drawingDir)
+        public string ToSvg(DrawingDir drawingDir, SvgCanvas canvas)
         {
-            string svg;
+            string svg = "";
+
+            Vector2D svgPosition = canvas.ConvertVector(position);
+
+            svg += "<circle cx=\"" + svgPosition.x + "\" cy=\"" + svgPosition.y + "\" r=\"" + drawingDir.GetNodeRadius() + "\" stroke=\"" + properties.strokeColor + "\" stroke-width=\"" + properties.strokeWidth + "\" fill=\"" + properties.strokeFill + "\" />" + Environment.NewLine;
+            string circle_marked_svg = "";
+
+            if (is_marked)
+            {
+                circle_marked_svg = "<circle cx=\"" + circle_position.x + "\" cy=\"" + circle_position.y + "\" r=\"" + properties.stateRadius * properties.markedRatio + "\" stroke=\"" + properties.strokeColor + "\" stroke-width=\"" + properties.strokeWidth + "\" fill=\"" + properties.strokeFill + "\" />" + Environment.NewLine;
+            }
+
+            string circle_text_svg = "<text x=\"" + circle_position.x + "\" y=\"" + circle_position.y + "\" dominant-baseline=\"central\" font-size=\"" + properties.textSize + "\"em fill=\"" + properties.textColor + "\" text-anchor=\"middle\">" + input_particle.name + "</text>" + Environment.NewLine;
+            return circle_svg + circle_marked_svg + circle_text_svg;
 
             return svg;
         }
