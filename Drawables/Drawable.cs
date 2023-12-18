@@ -10,5 +10,6 @@ namespace AutoAVL.Drawables
     public interface Drawable
     {
         public Box GetBox(DrawingDir drawingDir);
+        public string ToSvg(DrawingDir drawingDir);
     }
 }

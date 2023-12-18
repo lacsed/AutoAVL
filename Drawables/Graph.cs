@@ -66,33 +66,25 @@ namespace AutoAVL.Drawables
 
             drawingDir.SetCanvasDimensions(this.GetCanvasLimits());
 
-            foreach (Node node in graphNodes)
-                svgImage += node.ToSvg(drawingDir);
+            foreach (Drawable drawable in graphNodes.Concat<Drawable>(graphLinks).ToList())
+                svgImage += drawable.ToSvg(drawingDir);
 
-            return "";
+            string svgDimensions = drawingDir.SvgDimensions();
+            string svgSettings = drawingDir.SvgSettings();
+
+            return svgDimensions + svgSettings + svgImage;
         }
 
-        public (Vector2D topLeft, Vector2D bottomRight) GetCanvasLimits()
+        public Box GetCanvasLimits()
         {
-            Vector2D topLeft = new Vector2D();
-            Vector2D bottomRight = new Vector2D();
+            Box canvasBox = new Box();
 
-
-            foreach (Drawable drawable in graphNodes)
-
-            foreach (Node node in graphNodes)
+            foreach (Drawable drawable in graphNodes.Concat<Drawable>(graphLinks).ToList())
             {
-                topLeft = Vector2D.GetMinValues(topLeft, node.position - new Vector2D(drawingDir.TotalRadius(), drawingDir.TotalRadius()));
-                bottomRight = Vector2D.GetMaxValues(topLeft, node.position + new Vector2D(drawingDir.TotalRadius(), drawingDir.TotalRadius()));
+                canvasBox = Box.EncompassingBox(canvasBox, drawable.GetBox(drawingDir));
             }
 
-            foreach (Link link in graphLinks)
-            {
-                topLeft = Vector2D.GetMinValues(topLeft, link.GetExtremes() - new Vector2D(drawingDir.TotalRadius(), drawingDir.TotalRadius()));
-                bottomRight = Vector2D.GetMaxValues(topLeft, link.GetExtremes() + new Vector2D(drawingDir.TotalRadius(), drawingDir.TotalRadius()));
-            }
-
-            return (topLeft, bottomRight);
+            return canvasBox;
         }
     }
 }

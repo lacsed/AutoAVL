@@ -11,6 +11,12 @@ namespace AutoAVL.Drawables
         private Vector2D topLeft;
         private Vector2D bottomRight;
 
+        public Box()
+        {
+            this.topLeft = new Vector2D();
+            this.bottomRight = new Vector2D();
+        }
+
         public Box(Vector2D topLeft, Vector2D bottomRight)
         {
             this.topLeft = topLeft;
@@ -28,6 +34,16 @@ namespace AutoAVL.Drawables
             Vector2D bottomRight = new Vector2D(maxX, minY);
 
             return new Box(topLeft, bottomRight);
+        }
+
+        public Vector2D GetTopLeft()
+        {
+            return topLeft;
+        }
+
+        public Vector2D GetBottomRight()
+        {
+            return bottomRight;
         }
     }
 }

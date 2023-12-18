@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AutoAVL.Drawables;
 
 namespace AutoAVL.Settings
 {
@@ -21,11 +22,24 @@ namespace AutoAVL.Settings
             return nodeRadius + borderWidth;
         }
 
-        public void SetCanvasDimensions((Vector2D, Vector2D) diagonalLimits)
+        public void SetCanvasDimensions(Box canvasBox)
         {
-            canvasOrigin = diagonalLimits.Item1;
-            canvasWidth = diagonalLimits.Item2.x - diagonalLimits.Item1.x;
-            canvasHeight = diagonalLimits.Item1.y - diagonalLimits.Item2.y;
+            Vector2D topLeft = canvasBox.GetTopLeft();
+            Vector2D bottomRight = canvasBox.GetBottomRight();
+
+            canvasOrigin = topLeft;
+            canvasWidth = bottomRight.x - topLeft.x;
+            canvasHeight = topLeft.y - bottomRight.y;
+        }
+
+        public string SvgDimensions()
+        {
+            return "<svg height=\"" + canvasHeight + "\" width=\"" + canvasWidth + "\">" + Environment.NewLine;
+        }
+
+        public string SvgSettings()
+        {
+            
         }
     }
 }
