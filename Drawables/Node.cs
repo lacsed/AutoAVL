@@ -74,7 +74,29 @@ namespace AutoAVL.Drawables
 
         public static void InteractNodes(List<Node> nodes, PhyD phyD)
         {
+            for (int i = 0; i < nodes.Count - 1; i++)
+            {
+                for (int j = i + 1; j < nodes.Count; j++)
+                {
+                    nodes[i].InteractParticle(nodes[j], phyD);
+                }
+            }
+        }
 
+        void InteractParticle(Node nodeB, PhyD phyD)
+        {
+            Vector2D dispDir = (nodeB.position - this.position).Normalized();
+            float prtDist = (nodeB.position - this.position).Length();
+
+            if (prtDist < 1e-6)
+            {
+                prtDist = 1e-6f;
+            }
+
+            float force = (1 - atten) * spacing / prtDist;
+
+            nodeB.displacement += force * dispDir;
+            this.displacement -= force * dispDir;
         }
 
         public static float DisplaceNodes(List<Node> nodes)
@@ -86,18 +108,16 @@ namespace AutoAVL.Drawables
         {
             string svg = "";
 
-            Vector2D svgPosition = canvas.ConvertVector(position);
+            Vector2D svgPosition = canvas.ToSvgCoordinates(position);
 
-            svg += "<circle cx=\"" + svgPosition.x + "\" cy=\"" + svgPosition.y + "\" r=\"" + drawingDir.GetNodeRadius() + "\" stroke=\"" + properties.strokeColor + "\" stroke-width=\"" + properties.strokeWidth + "\" fill=\"" + properties.strokeFill + "\" />" + Environment.NewLine;
-            string circle_marked_svg = "";
+            svg += "<circle cx=\"" + svgPosition.x + "\" cy=\"" + svgPosition.y + "\" r=\"" + drawingDir.nodeRadius + "\" stroke=\"" + drawingDir.strokeColor + "\" stroke-width=\"" + drawingDir.borderWidth + "\" fill=\"" + drawingDir.strokeFill + "\" />" + Environment.NewLine;
 
-            if (is_marked)
+            if (marked)
             {
-                circle_marked_svg = "<circle cx=\"" + circle_position.x + "\" cy=\"" + circle_position.y + "\" r=\"" + properties.stateRadius * properties.markedRatio + "\" stroke=\"" + properties.strokeColor + "\" stroke-width=\"" + properties.strokeWidth + "\" fill=\"" + properties.strokeFill + "\" />" + Environment.NewLine;
+                svg += "<circle cx=\"" + svgPosition.x + "\" cy=\"" + svgPosition.y + "\" r=\"" + drawingDir.nodeRadius * drawingDir.markedRatio + "\" stroke=\"" + drawingDir.strokeColor + "\" stroke-width=\"" + drawingDir.borderWidth + "\" fill=\"" + drawingDir.strokeFill + "\" />" + Environment.NewLine;
             }
 
-            string circle_text_svg = "<text x=\"" + circle_position.x + "\" y=\"" + circle_position.y + "\" dominant-baseline=\"central\" font-size=\"" + properties.textSize + "\"em fill=\"" + properties.textColor + "\" text-anchor=\"middle\">" + input_particle.name + "</text>" + Environment.NewLine;
-            return circle_svg + circle_marked_svg + circle_text_svg;
+            svg += "<text x=\"" + svgPosition.x + "\" y=\"" + svgPosition.y + "\" dominant-baseline=\"central\" font-size=\"" + drawingDir.textSize + "\"em fill=\"" + drawingDir.textColor + "\" text-anchor=\"middle\">" + name + "</text>" + Environment.NewLine;
 
             return svg;
         }

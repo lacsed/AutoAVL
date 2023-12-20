@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -31,6 +32,11 @@ namespace AutoAVL
         public string SvgSettings()
         {
             return "<defs><marker id=\"arrowhead\" markerWidth=\"10\" markerHeight=\"7\" refX = \"7\" refY = \"3.5\" orient = \"auto\" ><polygon points=\"0 0, 10 3.5, 0 7\" /></marker></defs>" + Environment.NewLine;
+        }
+
+        public Vector2D ToSvgCoordinates(Vector2D v)
+        {
+            return new Vector2D(v.x - canvasOrigin.x, canvasOrigin.y - v.y);
         }
     }
 }

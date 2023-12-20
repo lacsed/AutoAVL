@@ -8,7 +8,7 @@ namespace AutoAVL.Settings
 {
     public class PhyD
     {
-        public float stopCondition;
+        public float stopCondition = 0.005f;
 
         public PhyD()
         {
