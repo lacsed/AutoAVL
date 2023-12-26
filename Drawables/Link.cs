@@ -35,6 +35,11 @@ namespace AutoAVL.Drawables
 
         }
 
+        public string ToSvg(DrawingDir drawingDir, SvgCanvas canvas)
+        {
+            return "";
+        }
+
         public Box GetBox(DrawingDir drawingDir)
         {
 

@@ -9,6 +9,8 @@ namespace AutoAVL.Settings
     public class PhyD
     {
         public float stopCondition = 0.005f;
+        public float attenuation = 0.1f;
+        public float repulsion = 1000.0f;
 
         public PhyD()
         {

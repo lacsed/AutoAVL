@@ -78,30 +78,51 @@ namespace AutoAVL.Drawables
             {
                 for (int j = i + 1; j < nodes.Count; j++)
                 {
-                    nodes[i].InteractParticle(nodes[j], phyD);
+                    nodes[i].InteractNode(nodes[j], phyD);
                 }
             }
         }
 
-        void InteractParticle(Node nodeB, PhyD phyD)
+        void InteractNode(Node nodeB, PhyD phyD)
         {
-            Vector2D dispDir = (nodeB.position - this.position).Normalized();
-            float prtDist = (nodeB.position - this.position).Length();
+            Vector2D normal = (nodeB.position - this.position).Normalized();
+            float nodesDistance = (nodeB.position - this.position).Length();
 
-            if (prtDist < 1e-6)
+            if (nodesDistance < 1e-6)
             {
-                prtDist = 1e-6f;
+                nodesDistance = 1e-6f;
             }
 
-            float force = (1 - atten) * spacing / prtDist;
+            float force = (1 - phyD.attenuation) * phyD.repulsion / nodesDistance;
 
-            nodeB.displacement += force * dispDir;
-            this.displacement -= force * dispDir;
+            nodeB.displacement += force * normal;
+            this.displacement -= force * normal;
         }
 
         public static float DisplaceNodes(List<Node> nodes)
         {
-            return 0;
+            float maximumDisplacement = float.MinValue;
+            foreach (Node node in nodes)
+            {
+                float currentDisplacement = node.displacement.Length();
+
+                if (currentDisplacement > maximumDisplacement)
+                    maximumDisplacement = currentDisplacement;
+
+                node.Displace();
+            }
+
+            return maximumDisplacement;
+        }
+
+        void Displace(Vector2D displacement)
+        {
+            this.position += displacement;
+        }
+
+        void Displace()
+        {
+            this.position += displacement;
         }
 
         public string ToSvg(DrawingDir drawingDir, SvgCanvas canvas)
