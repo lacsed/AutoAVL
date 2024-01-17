@@ -36,6 +36,34 @@ namespace AutoAVL.Drawables
             return new Box(topLeft, bottomRight);
         }
 
+        public static Box EncompassingBox(Vector2D a, Vector2D b)
+        {
+            float minX = Math.Min(a.x, b.x);
+            float maxX = Math.Max(a.x, b.x);
+
+            float minY = Math.Min(a.y, b.y);
+            float maxY = Math.Max(a.y, b.y);
+
+            Vector2D topLeft = new Vector2D(minX, maxY);
+            Vector2D bottomRight = new Vector2D(maxX, minY);
+
+            return new Box(topLeft, bottomRight);
+        }
+
+        public static Box EncompassingBox(Vector2D a, Vector2D b, Vector2D c)
+        {
+            float minX = Math.Min(Math.Min(a.x, b.x), c.x);
+            float maxX = Math.Max(Math.Max(a.x, b.x), c.x);
+
+            float minY = Math.Min(Math.Min(a.y, b.y), c.y);
+            float maxY = Math.Max(Math.Max(a.y, b.y), c.y);
+
+            Vector2D topLeft = new Vector2D(minX, maxY);
+            Vector2D bottomRight = new Vector2D(maxX, minY);
+
+            return new Box(topLeft, bottomRight);
+        }
+
         public Vector2D GetTopLeft()
         {
             return topLeft;

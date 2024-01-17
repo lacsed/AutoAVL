@@ -14,7 +14,7 @@ namespace AutoAVL
         private float canvasHeight;
         private Vector2D canvasOrigin;
 
-        public void SetCanvasDimensions(Box canvasBox)
+        public void SetUpCanvas(Box canvasBox)
         {
             Vector2D topLeft = canvasBox.GetTopLeft();
             Vector2D bottomRight = canvasBox.GetBottomRight();

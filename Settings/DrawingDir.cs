@@ -11,8 +11,10 @@ namespace AutoAVL.Settings
     {
         // Node settings.
         public float nodeRadius;
+        public float autoLinkRadius;
         public float borderWidth;
         public float markedRatio = 0.8f;
+        public float arcSize = 10.0f;
 
         // Colors
         public string strokeColor = "black";

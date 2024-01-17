@@ -25,6 +25,11 @@ namespace AutoAVL.Drawables
             graphNodes = new List<Node>();
             graphLinks = new List<Link>();
 
+            phyD = new PhyD();
+            drawingDir = new DrawingDir();
+
+            firstSimulation = true;
+
             foreach (AbstractState state in automaton.States())
             {
                 graphNodes.Add(new Node(state));
@@ -65,7 +70,7 @@ namespace AutoAVL.Drawables
             string svgImage = "";
             SvgCanvas canvas = new SvgCanvas();
 
-            canvas.SetCanvasDimensions(this.GetCanvasLimits());
+            canvas.SetUpCanvas(this.GetCanvasLimits());
 
             foreach (Drawable drawable in graphNodes.Concat<Drawable>(graphLinks).ToList())
                 svgImage += drawable.ToSvg(drawingDir, canvas);

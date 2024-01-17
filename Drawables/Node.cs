@@ -145,7 +145,11 @@ namespace AutoAVL.Drawables
 
         public Box GetBox(DrawingDir drawingDir)
         {
+            float radius = drawingDir.TotalRadius();
+            Vector2D topLeft = new Vector2D(position.x - radius, position.y + radius);
+            Vector2D bottomRight = new Vector2D(position.x + radius, position.y - radius);
 
+            return new Box(topLeft, bottomRight);
         }
     }
 }
