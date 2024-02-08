@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Transactions;
 using AutoAVL.Settings;
 
 namespace AutoAVL.Drawables
@@ -62,6 +63,35 @@ namespace AutoAVL.Drawables
 
             link.start.displacement += force * forceDirection;
             link.end.displacement -= force * forceDirection;
+        }
+
+        public static void SetUp(List<Link> links, DrawingDir drawingDir)
+        {
+            List<Guid> processedOpLinks = new List<Guid>();
+
+            foreach (Link link in links.Where(link => !link.isAutoLink && !link.isInitialLink))
+            {
+                if (processedOpLinks.Contains(link.guid))
+                    continue;
+
+                Link opLink = links.Find(x => x.end == link.start && x.start == link.end);
+
+                if (opLink != null)
+                {
+                    processedOpLinks.Add(opLink.guid);
+
+                    float transitionDistance = (link.end.position - link.start.position).Length();
+                    Vector2D middle = link.start.position.Middle(link.end.position);
+                    Vector2D perpendicularVec = (link.end.position - link.start.position).Perpendicular();
+
+                    link.auxPoint = middle + perpendicularVec * transitionDistance * drawingDir.linkRatio;
+                    opLink.auxPoint = middle - perpendicularVec * transitionDistance * drawingDir.linkRatio;
+                } 
+                else
+                {
+
+                }
+            }
         }
 
         public string ToSvg(DrawingDir drawingDir, SvgCanvas canvas)

@@ -5,6 +5,8 @@ VisualStudioVersion = 17.6.33723.286
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoAVL", "AutoAVL.csproj", "{52999F35-79A3-48DA-AF3A-78206A7E24F8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Testing", "..\Testing\Testing.csproj", "{DA033AA9-B952-4026-BECD-020BAE9A2EE2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{52999F35-79A3-48DA-AF3A-78206A7E24F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{52999F35-79A3-48DA-AF3A-78206A7E24F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{52999F35-79A3-48DA-AF3A-78206A7E24F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA033AA9-B952-4026-BECD-020BAE9A2EE2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA033AA9-B952-4026-BECD-020BAE9A2EE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA033AA9-B952-4026-BECD-020BAE9A2EE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA033AA9-B952-4026-BECD-020BAE9A2EE2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -61,6 +61,8 @@ namespace AutoAVL.Drawables
                 maxDisplacement = Node.DisplaceNodes(graphNodes);
 
             } while (maxDisplacement > phyD.stopCondition);
+
+            Link.SetUp(graphLinks, drawingDir);
         }
 
         public string ToSvg()
