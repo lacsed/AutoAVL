@@ -38,7 +38,7 @@ namespace AutoAVL.Drawables
             foreach (Transition transition in automaton.Transitions())
             {
                 graphLinks.Add(new Link(graphNodes.Find(x => x.name == transition.Origin.ToString()),
-                    graphNodes.Find(x => x.name == transition.Destination.ToString()), transition.ToString()));
+                    graphNodes.Find(x => x.name == transition.Destination.ToString()), transition.Trigger.ToString()));
             }
         }
 
@@ -93,6 +93,15 @@ namespace AutoAVL.Drawables
             }
 
             return canvasBox;
+        }
+
+        public void SaveSVG(string path, string fileName)
+        {
+            CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+
+            StreamWriter sw = File.CreateText(path + "\\" + fileName + ".html");
+            sw.Write(this.ToSvg());
+            sw.Close();
         }
     }
 }

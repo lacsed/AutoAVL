@@ -10,9 +10,9 @@ namespace AutoAVL.Settings
     public class DrawingDir
     {
         // Node settings.
-        public float nodeRadius;
-        public float autoLinkRadius;
-        public float borderWidth;
+        public float nodeRadius = 60.0f;
+        public float autoLinkRadius = 10.0f;
+        public float borderWidth = 2.0f;
         public float markedRatio = 0.8f;
         public float linkRatio = 0.8f;
         public float arcSize = 10.0f;
@@ -26,6 +26,13 @@ namespace AutoAVL.Settings
 
         // Text
         public float textSize = 25.0f;
+
+        public float arrowLength = 5.0f;
+        public float overlap = 0.2f;
+        public float textDistance = 5.0f;
+        public float arrowWidth = 10.0f;
+        public string arrowColor = "black";
+        public float linkStrokeWidth = 2.0f;
 
         public float TotalRadius()
         {
