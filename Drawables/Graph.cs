@@ -40,6 +40,7 @@ namespace AutoAVL.Drawables
                 graphLinks.Add(new Link(graphNodes.Find(x => x.name == transition.Origin.ToString()),
                     graphNodes.Find(x => x.name == transition.Destination.ToString()), transition.Trigger.ToString()));
             }
+            graphLinks.Add(new Link(graphNodes.Find(x => x.name == automaton.InitialState())));
         }
 
         public void Simulate()

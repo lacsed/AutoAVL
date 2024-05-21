@@ -73,5 +73,15 @@ namespace AutoAVL.Drawables
         {
             return bottomRight;
         }
+
+        public float Width()
+        {
+            return (float) Math.Abs(topLeft.x - bottomRight.x);
+        }
+
+        public float Height()
+        {
+            return (float) Math.Abs(topLeft.y - bottomRight.y);
+        }
     }
 }

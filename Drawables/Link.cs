@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
@@ -41,7 +42,20 @@ namespace AutoAVL.Drawables
             nameOffset = new Vector2D();
             guid = Guid.NewGuid();
             isAutoLink = (origin == destination);
-
+            isInitialLink = false;
+            auxPoint = new Vector2D();
+        }
+        
+        public Link(Node initialState)
+        {
+            start = initialState;
+            end = initialState;
+            this.name = "";
+            nameOffset = new Vector2D();
+            guid = Guid.NewGuid();
+            isAutoLink = false;
+            isInitialLink = true;
+            auxPoint = new Vector2D();
         }
 
         public static void PullLinks(List<Link> links, PhyD phyD)
@@ -55,6 +69,9 @@ namespace AutoAVL.Drawables
 
         static void PullLink(Link link, PhyD phyD)
         {
+            if (link.isAutoLink || link.isInitialLink)
+                return;
+                
             Vector2D nodeAPos = link.start.position;
             Vector2D nodeBPos = link.end.position;
 
@@ -102,35 +119,48 @@ namespace AutoAVL.Drawables
             foreach (Link link in links.Where(link => link.isAutoLink))
             {
                 List<Link> adjacentLinks = links.Where(adjacentLink => (adjacentLink.start == link.start || adjacentLink.end == link.end) && adjacentLink != link).ToList();
-                List<Vector2D> adjacentDirections = new List<Vector2D>();
 
-                foreach (Link adjacentLink in adjacentLinks)
-                {
-                    adjacentDirections.Add((adjacentLink.auxPoint - link.start.position));
-                }
-
-                adjacentDirections.Sort((v1, v2) => v1.Angle().CompareTo(v2.Angle()));
-
-                Vector2D sectionStart = new Vector2D(0, 0);
-                Vector2D sectionEnd = new Vector2D(0, 0);
-                float sectionAngle = float.MinValue;
-                Console.WriteLine(adjacentDirections.Count);
-                for (int i = 0; i <= adjacentDirections.Count - 1; i++)
-                {
-                    Console.WriteLine(i.ToString());
-                    float angle = Math.Abs(adjacentDirections[(i + 1) % adjacentDirections.Count].Angle() - adjacentDirections[i].Angle());
-                    Console.WriteLine("Angle = " + angle);
-                    if (angle > sectionAngle)
-                    {
-                        sectionAngle = angle;
-                        sectionStart = adjacentDirections[i];
-                        sectionEnd = adjacentDirections[(i + 1) % adjacentDirections.Count];
-                    }
-                }
-                
-                Vector2D linkDirection = sectionStart.Rotated(sectionAngle / 2).Normalized();
-                link.auxPoint = link.start.position + linkDirection * drawingDir.autoLinkRadius;
+                Vector2D linkDirection = AcomodateAutoInitialLink(link.start.position, adjacentLinks);
+                link.auxPoint = link.start.position + linkDirection * (drawingDir.AutoRadius() + drawingDir.TotalRadius());
             }
+            
+            Link initialLink = links.Find(x => x.isInitialLink);
+            List<Link> iAdjacentLinks = links.Where(adjacentLink => (adjacentLink.start == initialLink.start || adjacentLink.end == initialLink.end) && adjacentLink != initialLink).ToList();
+            Vector2D initialLinkDirection = AcomodateAutoInitialLink(initialLink.start.position, iAdjacentLinks);
+            initialLink.auxPoint = initialLink.start.position + initialLinkDirection * (drawingDir.initialLinkSize + drawingDir.TotalRadius());
+        }
+        
+        public static Vector2D AcomodateAutoInitialLink(Vector2D nodePos, List<Link> adjacentLinks)
+        {
+            List<Vector2D> adjacentDirections = new List<Vector2D>();
+
+            foreach(Link adjacentLink in adjacentLinks)
+            {
+                adjacentDirections.Add(adjacentLink.auxPoint - nodePos);
+            }
+
+            adjacentDirections.Sort((v1, v2) => v1.UnsignedAngle().CompareTo(v2.UnsignedAngle()));
+            
+            Vector2D sectionStart = new Vector2D();
+            Vector2D sectionEnd = new Vector2D();
+            float sectionAngle = float.MinValue;
+            
+            for(int i = 0; i <= adjacentDirections.Count - 1; i++)
+            {
+                Vector2D currentVector = adjacentDirections[i];
+                Vector2D nextVector = adjacentDirections[(i + 1) % adjacentDirections.Count];
+
+                float angle = currentVector.UnsignedRotationAngle(nextVector);
+
+                if (angle > sectionAngle)
+                {
+                    sectionAngle = angle;
+                    sectionStart = adjacentDirections[i];
+                    sectionEnd = adjacentDirections[(i + 1) % adjacentDirections.Count];
+                }
+            }
+            
+            return sectionStart.Rotated(sectionAngle / 2).Normalized();
         }
 
         public string ToSvg(DrawingDir drawingDir, SvgCanvas canvas)
@@ -141,17 +171,17 @@ namespace AutoAVL.Drawables
             }
             else if (isInitialLink)
             {
-                return "";
+                return this.GenerateStraightTransitionSVG(canvas, drawingDir);
             }
             else
             {
-                if ((auxPoint - start.position).Angle() == (end.position - auxPoint).Angle())
+                if ((auxPoint - start.position.Middle(end.position)).Length() < drawingDir.clipRatio * (start.position - end.position).Length() / 2)
                 {
                     return this.GenerateStraightTransitionSVG(canvas, drawingDir);
                 } 
                 else
                 {
-                    return this.GenerateCurvedTransitionSVG(canvas, drawingDir); ;
+                    return this.GenerateArcTransitionSVG(canvas, drawingDir); ;
                 }
             }
         }
@@ -160,7 +190,7 @@ namespace AutoAVL.Drawables
         {
             if (isAutoLink)
             {
-                float radius = drawingDir.TotalRadius();
+                float radius = drawingDir.AutoRadius();
                 Vector2D topLeft = new Vector2D(auxPoint.x - radius, auxPoint.y + radius);
                 Vector2D bottomRight = new Vector2D(auxPoint.x + radius, auxPoint.y - radius);
 
@@ -168,36 +198,103 @@ namespace AutoAVL.Drawables
             }
             else if (isInitialLink)
             {
-                return Box.EncompassingBox(auxPoint, end.position);
+                return Box.EncompassingBox(auxPoint, start.position);
             }
             else
             {
                 Vector2D perpendicular = (end.position - start.position).Perpendicular();
-                Vector2D middle = auxPoint + perpendicular * drawingDir.linkStrokeWidth;
+                Vector2D middle = auxPoint + perpendicular * (drawingDir.linkStrokeWidth + 2 * drawingDir.textSize);
 
                 return Box.EncompassingBox(start.position, middle, end.position);
             }
         }
+        
+        string GenerateArcTransitionSVG(SvgCanvas canvas, DrawingDir drawingDir)
+        {
+            string svgArc = "";
+            
+            Vector2D transitionDirection = (end.position - start.position).Normalized();
+            Vector2D perpendicularDirection = transitionDirection.Perpendicular();
+            Vector2D middlePoint = start.position.Middle(end.position);
+            
+            Vector2D center = Vector2D.FindCenter(start.position, end.position, auxPoint);
+            float arcRadius = (auxPoint - center).Length();
 
+            // Find the arrow's tip and base points by rotating the vector from the arc's center 
+            // by the angles formed by the node radius and the arrow length, respectively.
+            // Note: Since the rotation is counterclockwise, we must use negative angles.
+            float nodeRadiusAngle = Vector2D.AngleBetween(drawingDir.nodeRadius, arcRadius, arcRadius);
+            float arrowBaseAngle = Vector2D.AngleBetween(drawingDir.arrowLength, arcRadius, arcRadius);
+            Vector2D arrowTip = center + (end.position - center).Rotated(-nodeRadiusAngle);
+            Vector2D arrowBase = center + (end.position - center).Rotated(-(nodeRadiusAngle + arrowBaseAngle));
+            
+            Vector2D arcOrigin = center + (start.position - center).Rotated(nodeRadiusAngle);
+            Vector2D arcDestination = arrowBase;
+            
+            Vector2D textPosition = auxPoint + perpendicularDirection * drawingDir.textDistance;
+            
+            // Between two points exist four possible arcs in SVG.
+            // largeArcFlag determinnes if the arc will be the smallest or biggest between the points.
+            // sweepFlag determines if the arc will have a clockwise or counter-clockwise rotation.
+            int largeArcFlag = (auxPoint - middlePoint).Length() > arcRadius ? 1 : 0;
+            int sweepFlag = (end.position - start.position).Cross(auxPoint - end.position) < 0 ? 0 : 1;
+            
+            // All points need to be converted to the SVG canva's coordinate system.
+            arcOrigin = canvas.ToSvgCoordinates(arcOrigin);
+            arcDestination = canvas.ToSvgCoordinates(arcDestination);
+            arrowBase = arcDestination;
+            arrowTip = canvas.ToSvgCoordinates(arrowTip);
+            
+            // Construct the arc's path attribute.
+            string arcPath = $"M {arcOrigin.x} {arcOrigin.y} A {arcRadius} {arcRadius} 0 {largeArcFlag} {sweepFlag} {arcDestination.x} {arcDestination.y}";
+
+            // Line attributes.
+            string stroke = $"stroke=\"{drawingDir.strokeColor}\"";
+            string strokeWidth = $"stroke-width=\"{drawingDir.linkStrokeWidth}\"";
+            string fill = "fill=\"none\"";
+
+            svgArc += $"<path d=\"{arcPath}\" {stroke} {strokeWidth} {fill} />{Environment.NewLine}";
+            svgArc += GenerateArrowheadPolygonSVG(arrowTip, arrowBase, drawingDir);
+            svgArc += GenerateSvgTextElement(textPosition, perpendicularDirection, canvas, name, drawingDir);
+            
+            
+            return svgArc;
+        }
+        
         string GenerateStraightTransitionSVG(SvgCanvas canvas, DrawingDir drawingDir)
         {
             Vector2D transitionDirection = (end.position - start.position).Normalized();
+            if (isInitialLink) transitionDirection = (end.position - auxPoint).Normalized();
+            
             Vector2D perpendicularDirection = transitionDirection.Perpendicular();
+            
+            Vector2D arrowTip = end.position - transitionDirection * drawingDir.nodeRadius;
+            Vector2D arrowBase = end.position - transitionDirection * (drawingDir.nodeRadius + drawingDir.arrowLength);
 
-            Vector2D transitionOrigin = canvas.ToSvgCoordinates(start.position + transitionDirection * drawingDir.nodeRadius);
-            Vector2D transitionDestination = canvas.ToSvgCoordinates(end.position - transitionDirection * drawingDir.nodeRadius);
+            Vector2D lineOrigin = start.position + transitionDirection * drawingDir.nodeRadius;
+            if (isInitialLink) lineOrigin = auxPoint;
+            
+            Vector2D lineDestination = arrowBase;
 
             Vector2D textPosition = auxPoint + perpendicularDirection * drawingDir.textDistance;
+            
+            // Convert the points to the SVG canva's coordinate system.
+            arrowTip = canvas.ToSvgCoordinates(arrowTip);
+            arrowBase = canvas.ToSvgCoordinates(arrowBase);
+            lineOrigin = canvas.ToSvgCoordinates(lineOrigin);
+            lineDestination = canvas.ToSvgCoordinates(lineDestination);
+            
+            string svgLine = $"<line x1=\"{lineOrigin.x}\" y1=\"{lineOrigin.y}\" x2=\"{lineDestination.x}\" y2=\"{lineDestination.y}\" stroke=\"{drawingDir.strokeColor}\" stroke-width=\"{drawingDir.linkStrokeWidth}\" />{Environment.NewLine}";
+            
+            svgLine += GenerateArrowheadPolygonSVG(arrowTip, arrowBase, drawingDir);
+            if (isInitialLink) return svgLine;
+            
+            svgLine += GenerateSvgTextElement(textPosition, perpendicularDirection, canvas, name, drawingDir);
 
-            string svgArrowElement = GenerateStraightArrowSVG(transitionOrigin, transitionDestination, drawingDir);
-            string svgTextElement = GenerateSvgTextElement(textPosition, perpendicularDirection, canvas, name, drawingDir);
-
-            string svgRepresentation = svgArrowElement + svgTextElement;
-
-            return svgRepresentation;
+            return svgLine;
         }
 
-        string GenerateCurvedTransitionSVG(SvgCanvas canvas, DrawingDir drawingDir)
+        /* string GenerateCurvedTransitionSVG(SvgCanvas canvas, DrawingDir drawingDir)
         {
             Vector2D transitionDirection = (end.position - start.position).Normalized();
             Vector2D perpendicularDirection = transitionDirection.Perpendicular();
@@ -209,7 +306,7 @@ namespace AutoAVL.Drawables
             Vector2D originSVG = canvas.ToSvgCoordinates(transitionOrigin);
             Vector2D destinationSVG = canvas.ToSvgCoordinates(transitionDestination);
 
-            Vector2D textPosition = auxPoint + perpendicularDirection * (drawingDir.arcSize + drawingDir.textDistance);
+            Vector2D textPosition = auxPoint;// + perpendicularDirection * drawingDir.textDistance;
 
             string svgArrowElement = GenerateCurvedArrowSVG(originSVG, destinationSVG, controlPointSVG, drawingDir);
             string svgTextElement = GenerateSvgTextElement(textPosition, perpendicularDirection, canvas, name, drawingDir);
@@ -217,10 +314,22 @@ namespace AutoAVL.Drawables
             string svgRepresentation = svgArrowElement + svgTextElement;
 
             return svgRepresentation;
-        }
+        } */
 
-        static string GenerateCurvedArrowSVG(Vector2D origin, Vector2D destination, Vector2D control, DrawingDir drawingDir)
+        /* static string GenerateCurvedArrowSVG(Vector2D origin, Vector2D destination, Vector2D control, DrawingDir drawingDir)
         {
+            Vector2D center = Vector2D.FindCenter(origin, destination, control);
+            float arcRadius = (control - center).Length();
+
+            // Find the arrow's tip and base points by rotating the vector from the arc's center 
+            // by the angles formed by the node radius and the arrow length, respectively.
+            // Note: Since the rotation is counterclockwise, we must use negative angles.
+            float arrowPointAngle = Vector2D.AngleBetween(drawingDir.nodeRadius, arcRadius, arcRadius);
+            float arrowBaseAngle = Vector2D.AngleBetween(drawingDir.arrowLength, arcRadius, arcRadius);
+            Vector2D arrowTip = center + (destination - center).Rotated(-arrowPointAngle);
+            Vector2D arrowBase = center + (destination - center).Rotated(-(arrowPointAngle + arrowBaseAngle));
+
+
             Vector2D insideArrow = destination + (control - destination).Normalized() * drawingDir.arrowLength / 2;
 
             string svgPathElement = GenerateQuadraticBezierPathSVG(origin, insideArrow, control, drawingDir);
@@ -229,9 +338,10 @@ namespace AutoAVL.Drawables
             string svgRepresentation = svgPathElement + svgArrowheadElement;
 
             return svgRepresentation;
-        }
+        } */
 
-        static string GenerateQuadraticBezierPathSVG(Vector2D origin, Vector2D destination, Vector2D control, DrawingDir drawingDir)
+
+        /* static string GenerateArcPathSVG(Vector2D origin, Vector2D destination, Vector2D control, DrawingDir drawingDir)
         {
             // Construct the path attribute.
             string path = $"M {origin.x} {origin.y} Q {control.x} {control.y} {destination.x} {destination.y}";
@@ -249,9 +359,29 @@ namespace AutoAVL.Drawables
             string svgPathElement = $"<path d=\"{path}\" {stroke} {strokeWidth} {fill} />{Environment.NewLine}";
 
             return svgPathElement;
-        }
+        } */
 
-        static string GenerateStraightArrowSVG(Vector2D origin, Vector2D destination, DrawingDir drawingDir)
+        /* static string GenerateQuadraticBezierPathSVG(Vector2D origin, Vector2D destination, Vector2D control, DrawingDir drawingDir)
+        {
+            // Construct the path attribute.
+            string path = $"M {origin.x} {origin.y} Q {control.x} {control.y} {destination.x} {destination.y}";
+
+            // Construct the stroke attribute.
+            string stroke = $"stroke=\"{drawingDir.strokeColor}\"";
+
+            // Construct the stroke-width attribute.
+            string strokeWidth = $"stroke-width=\"{drawingDir.linkStrokeWidth}\"";
+
+            // Construct the fill attribute.
+            string fill = "fill=\"none\"";
+
+            // Construct the SVG path element.
+            string svgPathElement = $"<path d=\"{path}\" {stroke} {strokeWidth} {fill} />{Environment.NewLine}";
+
+            return svgPathElement;
+        } */
+
+        /* static string GenerateStraightArrowSVG(Vector2D origin, Vector2D destination, DrawingDir drawingDir)
         {
             Vector2D insideArrow = destination + (origin - destination).Normalized() * drawingDir.arrowLength / 2;
 
@@ -261,14 +391,14 @@ namespace AutoAVL.Drawables
             string svgRepresentation = svgLineElement + svgArrowheadElement;
 
             return svgRepresentation;
-        }
+        } */
 
-        static string GenerateLineElementSVG(Vector2D origin, Vector2D destination, DrawingDir drawingDir)
+        /* static string GenerateLineElementSVG(Vector2D origin, Vector2D destination, DrawingDir drawingDir)
         {
             string svgLineElement = $"<line x1=\"{origin.x}\" y1=\"{origin.y}\" x2=\"{destination.x}\" y2=\"{destination.y}\" stroke=\"{drawingDir.strokeColor}\" stroke-width=\"{drawingDir.linkStrokeWidth}\" />{Environment.NewLine}";
 
             return svgLineElement;
-        }
+        } */
 
         string AutoLinkSVG(DrawingDir drawingDir, SvgCanvas canvas)
         {
@@ -303,24 +433,23 @@ namespace AutoAVL.Drawables
             Vector2D textPosition = transitionCenter + transitionDirection * (drawingDir.textDistance + drawingDir.autoLinkRadius);
 
             output += "<path stroke-width=\"1\" stroke=\"black\" fill=\"none\" d=\" M " + transitionStartSVG.x + " " + transitionStartSVG.y + " A " + drawingDir.autoLinkRadius + " " + drawingDir.autoLinkRadius + " 0 1 1 " + transitionEndSVG.x + " " + transitionEndSVG.y + "\" />" + Environment.NewLine;
-            output += GenerateArrowheadPolygonSVG(arrowTipSVG, drawingDir, arrowDirectionSVG);
+            //output += GenerateArrowheadPolygonSVG(arrowTipSVG, drawingDir, arrowDirectionSVG);
             output += GenerateSvgTextElement(textPosition, transitionDirection, canvas, name, drawingDir);
 
             return output;
         }
 
-        static string GenerateArrowheadPolygonSVG(Vector2D tip, DrawingDir drawingDir, Vector2D direction)
+        static string GenerateArrowheadPolygonSVG(Vector2D arrowTip, Vector2D arrowBase, DrawingDir drawingDir)
         {
-            // Calculate the base point of the arrowhead by subtracting the normalized direction vector multiplied by the arrow length from the tip.
-            Vector2D basePoint = tip - direction.Normalized() * drawingDir.arrowLength;
-
+            Vector2D arrowDirection = (arrowTip  - arrowBase).Normalized();
+            Vector2D perpendicular = arrowDirection.Perpendicular();
             // Calculate the side points of the arrowhead by adding/subtracting the perpendicular direction vector multiplied by half of the arrow width to/from the base point.
-            Vector2D sidePoint1 = basePoint + direction.Perpendicular() * drawingDir.arrowWidth / 2;
-            Vector2D sidePoint2 = basePoint - direction.Perpendicular() * drawingDir.arrowWidth / 2;
+            Vector2D sidePoint1 = arrowBase + perpendicular * drawingDir.arrowWidth / 2;
+            Vector2D sidePoint2 = arrowBase - perpendicular * drawingDir.arrowWidth / 2;
 
             // Construct the SVG polygon element with the calculated points, arrow color, and stroke width.
             string svgPolygonElement = $"<polygon fill=\"{drawingDir.arrowColor}\" stroke-width=\"1\" " +
-                $"points=\"{tip.x} {tip.y} {sidePoint1.x} {sidePoint1.y} {sidePoint2.x} {sidePoint2.y}\" />{Environment.NewLine}";
+                $"points=\"{arrowTip.x} {arrowTip.y} {sidePoint1.x} {sidePoint1.y} {sidePoint2.x} {sidePoint2.y}\" />{Environment.NewLine}";
 
             return svgPolygonElement;
         }
@@ -328,18 +457,27 @@ namespace AutoAVL.Drawables
         static string GenerateSvgTextElement(Vector2D position, Vector2D direction, SvgCanvas canvas, string text, DrawingDir drawingDir)
         {
             // Calculate the angle based on the direction.
-            float angle = direction.Angle();
-
+            float angle = direction.UnsignedAngle();
+            
+            float anchorAngleDeg = 60.0f;
+            float anchorAngleRad = anchorAngleDeg * (float) Math.PI / 180;
+            
             // Determine the text anchor based on the angle.
             string textAnchor;
-            if (angle >= 5.4978f || angle <= 0.7854f)
+            if (angle >= 2 * (float) Math.PI - anchorAngleRad || angle <= anchorAngleRad)
                 textAnchor = "start";
-            else if (angle > 0.7854f && angle < 2.3562f)
-                textAnchor = "middle";
-            else if (angle >= 2.3562f && angle <= 3.9269f)
+            else if (angle >= (float) Math.PI - anchorAngleRad && angle <= (float) Math.PI + anchorAngleRad)
                 textAnchor = "end";
             else
                 textAnchor = "middle";
+                
+            string dominantBaseline;
+            if (angle > (float) Math.PI)
+                dominantBaseline = "hanging";
+            else
+                dominantBaseline = "auto";
+                
+                
 
             // Convert the position to SVG coordinates.
             Vector2D svgPosition = canvas.ToSvgCoordinates(position);
@@ -348,6 +486,7 @@ namespace AutoAVL.Drawables
             string svgTextElement = $@"
                 <text x=""{svgPosition.x}"" y=""{svgPosition.y}"" 
                       text-anchor=""{textAnchor}"" 
+                      dominant-baseline=""{dominantBaseline}"" 
                       font-size=""{drawingDir.textSize}"" fill=""{drawingDir.textColor}"">
                     {text}
                 </text>

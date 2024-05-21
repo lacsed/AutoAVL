@@ -16,12 +16,9 @@ namespace AutoAVL
 
         public void SetUpCanvas(Box canvasBox)
         {
-            Vector2D topLeft = canvasBox.GetTopLeft();
-            Vector2D bottomRight = canvasBox.GetBottomRight();
-
-            canvasOrigin = topLeft;
-            canvasWidth = bottomRight.x - topLeft.x;
-            canvasHeight = topLeft.y - bottomRight.y;
+            canvasOrigin = canvasBox.GetTopLeft();
+            canvasWidth = canvasBox.Width();
+            canvasHeight = canvasBox.Height();
         }
 
         public string SvgDimensions()

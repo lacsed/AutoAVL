@@ -32,6 +32,9 @@ namespace AutoAVL
             return (dfa == null) ? ndfa.Transitions.ToList() : dfa.Transitions.ToList();
         }
 
-
+        public string InitialState()
+        {
+            return (dfa == null) ? ndfa.InitialState.ToString() : dfa.InitialState.ToString();
+        }
     }
 }

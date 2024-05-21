@@ -14,7 +14,7 @@ namespace AutoAVL.Settings
         public float autoLinkRadius = 10.0f;
         public float borderWidth = 2.0f;
         public float markedRatio = 0.8f;
-        public float linkRatio = 0.8f;
+        public float linkRatio = 0.4f;
         public float arcSize = 10.0f;
 
         // Colors
@@ -27,16 +27,23 @@ namespace AutoAVL.Settings
         // Text
         public float textSize = 25.0f;
 
-        public float arrowLength = 5.0f;
+        public float arrowLength = 10.0f;
         public float overlap = 0.2f;
-        public float textDistance = 5.0f;
-        public float arrowWidth = 10.0f;
+        public float textDistance = 4.0f;
+        public float arrowWidth = 20.0f;
         public string arrowColor = "black";
         public float linkStrokeWidth = 2.0f;
+        public float clipRatio = 0.2f;
+        public float initialLinkSize = 100.0f;
 
         public float TotalRadius()
         {
             return nodeRadius + borderWidth;
+        }
+
+        public float AutoRadius()
+        {
+            return autoLinkRadius + borderWidth;
         }
 
     }

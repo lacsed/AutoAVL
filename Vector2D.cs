@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -174,37 +176,46 @@ namespace AutoAVL
             float midY = (y + vector.y) / 2f;
             return new Vector2D(midX, midY);
         }
-
-        /// <summary>
-        /// Calculates the angle between the vector and the positive x-axis in radians.
-        /// </summary>
-        /// <returns>The angle between the vector and the positive x-axis in radians.</returns>
-        public float Angle()
-        {
-            // Calculate the cosine of the angle between the vector and the positive x-axis
-            float cos_value = x / Length();
-
-            // Calculate the angle between the vector and the positive x-axis using the inverse cosine function
-            float cos_angle = (float) Math.Acos(cos_value);
-
-            return cos_angle;
-        }
-
+        
         public float Slope()
         {
             return y / x;
         }
 
-
         /// <summary>
-        /// Calculates and returns the angle between two vectors in radians.
+        /// Returns the angle between the vector and the x-axis.
         /// </summary>
-        /// <param name="vector">The other Vector2D object.</param>
-        /// <returns>The angle value as a float in radians.</returns>
-        public float AngleBetween(Vector2D vector)
+        /// <returns>The angle between the vector and the positive x-axis in radians. The angle is always taken in a counter-clockwise rotation,
+        /// so it will always be a positive value in the range 0 ≤ θ < 2π.</returns>
+        public float UnsignedAngle()
         {
-            float dotProduct = Dot(vector);
-            float lengthsProduct = Length() * vector.Length();
+            float signedAngle = this.SignedAngle();
+            
+            return (signedAngle >= 0) ? signedAngle : signedAngle + 2 * (float) Math.PI;
+        }
+        
+        /// <summary>
+        /// Returns the angle between the vector and the x-axis.
+        /// </summary>
+        /// <returns>The angle between the vector and the positive x-axis in radians. The angle is taken using the rotation wich results in the smallest absolute value,
+        /// so both clockwise and counter-clockwise rotations are used. In the case of an counter-clockwise rotation, the angle is positive, while if the rotation is clockwise the 
+        /// angle will be negatie. The angle's values are in the range -π ≤ θ ≤ π. For the boundary positions, the angle will be 0, π/2, π and -π/2 for when the vector
+        /// aligns with +x, +y, -x and -y axis respectively.</returns>
+        public float SignedAngle()
+        {
+            
+            return (float) Math.Atan2(y,x);
+        }
+        
+        /// <summary>
+        /// Returns the smallest angle between two vectors, regardless of order.
+        /// </summary>
+        /// <returns>The smallest angle delimited by vectors A and B, without considering the order the vectors are taken in.
+        /// The value is always positive, in the range 0 ≤ θ ≤ π</returns>
+        public static float SmallestAngleBetweenVectors(Vector2D vectorA, Vector2D vectorB)
+        {
+            float dotProduct = vectorA.Dot(vectorB);
+            float lengthsProduct = vectorA.Length() * vectorB.Length();
 
             if (lengthsProduct == 0.0f)
             {
@@ -215,6 +226,56 @@ namespace AutoAVL
             float angle = (float) Math.Acos(cosAngle);
 
             return angle;
+        }
+        
+        /// <summary>
+        /// Returns the largest angle between two vectors, regardless of order.
+        /// </summary>
+        /// <returns>The largest angle delimited by vectors A and B, without considering the order the vectors are taken in.
+        /// The value is always positive, in the range π ≤ θ ≤ 2π</returns>
+        public static float LargestAngleBetweenVectors(Vector2D vectorA, Vector2D vectorB)
+        {
+            float smallestAngle = SmallestAngleBetweenVectors(vectorA, vectorB);
+            
+            return 2 * (float) Math.PI - smallestAngle;
+        }
+        
+        /// <summary>
+        /// Returns the smallest angle in module needed to rotate the current vector to the given vector's position.
+        /// </summary>
+        /// <returns>The smallest angle necessary to rotate the current vector to the position of the given vector.
+        /// The angle can be either positive or negative, meaning the needed rotation is counter-clockwise or clockwise, respectively.
+        /// Tha angle's value range is -π ≤ θ ≤ π.</returns>
+        public float SignedRotationAngle(Vector2D vectorB)
+        {
+            float magnitudeProduct = this.Length() * vectorB.Length();
+            float sin = Cross(vectorB) / magnitudeProduct;
+            float cos = Dot(vectorB) / magnitudeProduct;
+
+            return (float) Math.Atan2(sin, cos);
+        }
+        
+        /// <summary>
+        /// Returns the angle needed to rotate the current vector to the given vector's position.
+        /// </summary>
+        /// <returns>The angle necessary to rotate the current vector to the position of the given vector, always in a counter-clockwise rotation.
+        /// The angle can only be positive, with it's value in the range 0 ≤ θ < 2π.</returns>
+        public float UnsignedRotationAngle(Vector2D vectorB)
+        {
+            float signedRotationAngle = this.SignedRotationAngle(vectorB);
+
+            return (signedRotationAngle >= 0) ? signedRotationAngle : signedRotationAngle + 2 * (float) Math.PI;
+        }
+
+        public static float AngleBetween(float opposite, float adjacent1, float adjacent2)
+        {
+            // Calculate the cosine value of the angle using the Law of Cosines formula
+            float cosValue = (-opposite * opposite + adjacent2 * adjacent2 + adjacent1 * adjacent1) / (2 * adjacent2 * adjacent1);
+
+            // Calculate the angle in radians using the inverse cosine function
+            float angleInRadians = (float) Math.Acos(cosValue);
+
+            return angleInRadians;
         }
 
         public static float DistanceToLine(Vector2D point, Vector2D lineStart, Vector2D lineEnd)
@@ -230,44 +291,9 @@ namespace AutoAVL
             return distance;
         }
 
-        public float SignedAngleBetween(Vector2D vector)
-        {
-            float angle = (float) Math.Atan2(vector.y, vector.x) - (float) Math.Atan2(y, x);
-
-            if (angle < 0)
-            {
-                angle += (2 * (float) Math.PI);
-            }
-
-            return angle;
-        }
-
-
-        public static float AngleBetween(float opposite, float adjacent1, float adjacent2)
-        {
-            // Calculate the cosine value of the angle using the Law of Cosines formula
-            float cosValue = (-opposite * opposite + adjacent2 * adjacent2 + adjacent1 * adjacent1) / (2 * adjacent2 * adjacent1);
-
-            // Calculate the angle in radians using the inverse cosine function
-            float angleInRadians = (float) Math.Acos(cosValue);
-
-            return angleInRadians;
-        }
-
-
         /// <summary>
-        /// Calculates and returns the angle between two vectors in degrees.
-        /// </summary>
-        /// <param name="vector">The other Vector2D object.</param>
-        /// <returns>The angle value as a float in degrees.</returns>
-        public float AngleBetweenInDegrees(Vector2D vector)
-        {
-            float radians = AngleBetween(vector);
-            return radians * (180.0f / (float) Math.PI);
-        }
-
-        /// <summary>
-        /// Rotates the vector by a given angle in radians.
+        /// Rotates the vector counterclockwise by a given angle in radians.
+        /// Modifies the current vector.
         /// </summary>
         /// <param name="angle">The angle value as a float in radians.</param>
         public void Rotate(float angle)
@@ -281,6 +307,25 @@ namespace AutoAVL
             x = new_x;
             y = new_y;
         }
+
+        /// <summary>
+        /// Returns a new vector that is the result of rotating the current vector counterclockwise by a given angle in radians.
+        /// Does not modify the current vector.
+        /// </summary>
+        /// <param name="angle">The angle value as a float in radians.</param>
+        /// <returns>A new vector rotated by the given angle.</returns>
+        public Vector2D Rotated(float angle)
+        {
+            float cos = (float) Math.Cos(angle);
+            float sin = (float) Math.Sin(angle);
+
+            float new_x = x * cos - y * sin;
+            float new_y = x * sin + y * cos;
+            
+
+            return new Vector2D(new_x, new_y);
+        }
+
 
         /// <summary>
         /// Rotates the vector by a given angle in degrees.
@@ -356,26 +401,6 @@ namespace AutoAVL
 
             return distance;
         }
-
-
-        /// <summary>
-        /// Rotates a vector by a given angle in radians and returns the result as a new Vector2D object.
-        /// </summary>
-        /// <param name="angle">The angle in radians. Positive angle for counterclockwise rotation, negative angle for clockwise rotation.</param>
-        /// <returns>A new Vector2D object that represents the rotated vector.</returns>
-        public Vector2D Rotated(float angle)
-        {
-            // Calculate the cosine and sine of the angle
-            float cos = (float) Math.Cos(angle);
-            float sin = (float) Math.Sin(angle);
-
-            // Perform the rotation calculation
-            // The rotation direction depends on the sign of the angle
-            // Positive angle for counterclockwise rotation (anticlockwise)
-            // Negative angle for clockwise rotation
-            return new Vector2D(x * cos - y * sin, x * sin + y * cos);
-        }
-
 
         /// <summary>
         /// Returns the vector as a string in the format "(x, y)".
